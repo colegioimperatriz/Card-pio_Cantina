@@ -60,7 +60,7 @@
   <script>
   // ====== CONFIGURAÇÃO SUPABASE ======
   const SUPABASE_URL = "https://dfyhbeppubrmxhoyqjrl.supabase.co";
-  const SUPABASE_KEY = "SUA_CHAVE_AQUI"; // troque pela sua chave
+  const SUPABASE_KEY = "SUA_CHAVE_ANON_AQUI"; // substitua pela sua chave anon do Supabase
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const calendarGrid = document.getElementById("calendar-grid");
@@ -105,7 +105,7 @@
     for (let d=1; d<=daysInMonth; d++){
       const dateObj = new Date(year, month, d);
       const weekday = dateObj.getDay();
-      if (weekday >= 1 && weekday <= 6) {
+      if (weekday >= 1 && weekday <= 6) { // Segunda a Sábado
         weekRow.push(d);
         if (weekday === 6 || d === daysInMonth) {
           renderWeek(weekRow, year, month);
@@ -171,12 +171,17 @@
     };
     const allEmpty = Object.values(newEntry).every(v => !v);
 
-    if (allEmpty) {
-      await supabaseClient.from("cardapio_cantina").delete().eq("data_iso", modalDate);
-      delete menuData[modalDate];
-    } else {
-      await supabaseClient.from("cardapio_cantina").upsert({ data_iso: modalDate, ...newEntry }, { onConflict: 'data_iso' });
-      menuData[modalDate] = newEntry;
+    try {
+      if (allEmpty) {
+        await supabaseClient.from("cardapio_cantina").delete().eq("data_iso", modalDate);
+        delete menuData[modalDate];
+      } else {
+        await supabaseClient.from("cardapio_cantina").upsert({ data_iso: modalDate, ...newEntry }, { onConflict: 'data_iso' });
+        menuData[modalDate] = newEntry;
+      }
+    } catch (err) {
+      console.error("Erro ao salvar:", err);
+      alert("Erro ao salvar no banco.");
     }
     closeModal();
     renderCalendar();
@@ -195,7 +200,6 @@
     try {
       const calendar = document.getElementById("calendar");
       const rect = calendar.getBoundingClientRect();
-      const calWidth = Math.ceil(rect.width);
 
       const clone = calendar.cloneNode(true);
       clone.querySelectorAll("button").forEach(el => el.remove());
