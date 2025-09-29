@@ -14,7 +14,7 @@
   <header class="flex flex-wrap items-center justify-between mb-4 gap-2">
     <div>
       <h1 id="titulo" class="text-2xl font-semibold text-green-600">Cardápio da Cantina</h1>
-      <p class="text-sm text-slate-500">Cadastro de lanches (manhã/tarde) - Colégio Imperatriz. Exporta PNG responsivo. (V1.0)</p>
+      <p class="text-sm text-slate-500">Cadastro de lanches (manhã/tarde) - Colégio Imperatriz. Exporta PNG responsivo. (v 2.0)</p>
     </div>
     <div class="space-x-2">
       <button onclick="changeMonth(-1)" class="btn">◀</button>
@@ -172,7 +172,7 @@ async function saveFromModal(){
     tarde: modalTarde.value.trim()
   };
   const allEmpty = Object.values(newEntry).every(v => !v);
-  const isoDate = new Date(modalDate).toISOString().slice(0,10); // garante YYYY-MM-DD
+  const isoDate = new Date(modalDate).toISOString().slice(0,10);
   try {
     let res;
     if(allEmpty){
@@ -197,7 +197,7 @@ async function saveFromModal(){
 function changeMonth(delta){ viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()+delta, 1); renderCalendar(); }
 function goToday(){ const d=new Date(); viewDate=new Date(d.getFullYear(),d.getMonth(),1); renderCalendar(); }
 
-// ====== export PNG ======
+// ====== export PNG com logo e ícones ======
 async function generateImage(){
   if(exportBtn.disabled) return;
   exportBtn.disabled=true;
@@ -209,30 +209,65 @@ async function generateImage(){
     const clone=calendar.cloneNode(true);
     clone.querySelectorAll("button").forEach(el=>el.remove());
     clone.querySelectorAll(".text-right").forEach(el=>el.remove());
+    clone.querySelectorAll(".hover\\:shadow-lg").forEach(n=>n.classList.remove("hover:shadow-lg"));
 
     const wrapper=document.createElement('div');
     wrapper.style.position='absolute';
     wrapper.style.left='-9999px';
-    wrapper.style.background='white';
+    wrapper.style.top='0';
     wrapper.style.padding='40px';
+    wrapper.style.background='white';
     wrapper.style.border='4px solid #16a34a';
     wrapper.style.borderRadius='20px';
+    wrapper.style.overflow='visible';
+    wrapper.style.fontFamily="Arial, sans-serif";
+
+    // ===== header com logo e título =====
+    const headerRow=document.createElement("div");
+    headerRow.style.display="flex";
+    headerRow.style.alignItems="center";
+    headerRow.style.justifyContent="flex-start";
+    headerRow.style.gap="20px";
+    headerRow.style.marginBottom="25px";
+
+    const logo=document.createElement("img");
+    logo.src="https://i.ibb.co/KxSrH0Nj/logo.png";
+    logo.alt="Logo";
+    logo.crossOrigin="anonymous";
+    logo.style.maxHeight="70px";
+    logo.style.width="auto";
+    logo.style.display="block";
+
+    await new Promise(resolve=>{ logo.onload=resolve; logo.onerror=resolve; });
+
+    headerRow.appendChild(logo);
+
+    const titleBlock=document.createElement("div");
+    titleBlock.style.flex="1";
 
     const title=document.createElement("h2");
     const monthName=viewDate.toLocaleString("pt-BR",{month:"long"});
     const year=viewDate.getFullYear();
-    title.textContent=`Cardápio da Cantina — ${monthName}/${year}`;
+    title.textContent=`Cardápio da Cantina — ${monthName.charAt(0).toUpperCase()+monthName.slice(1)}/${year}`;
     title.style.color="#16a34a";
     title.style.fontSize="24px";
     title.style.fontWeight="700";
-    title.style.marginBottom="20px";
+    title.style.marginBottom="6px";
 
-    wrapper.appendChild(title);
+    const iconsRow=document.createElement("div");
+    iconsRow.innerHTML="🍽️ 🥗 🍖 🍊 🍮";
+    iconsRow.style.fontSize="22px";
+
+    titleBlock.appendChild(title);
+    titleBlock.appendChild(iconsRow);
+    headerRow.appendChild(titleBlock);
+    wrapper.appendChild(headerRow);
+
     wrapper.appendChild(clone);
     document.body.appendChild(wrapper);
 
-    const canvas = await html2canvas(wrapper, { scale: 2, backgroundColor: "#ffffff" });
-    const dataURL = canvas.toDataURL("image/png");
+    const canvas=await html2canvas(wrapper,{scale:2,backgroundColor:"#ffffff",useCORS:true});
+    const dataURL=canvas.toDataURL("image/png");
     const a=document.createElement("a");
     a.href=dataURL;
     a.download=`cantina-${year}-${String(viewDate.getMonth()+1).padStart(2,"0")}.png`;
