@@ -15,7 +15,7 @@
   <header class="flex flex-wrap items-center justify-between mb-4 gap-2">
     <div>
       <h1 id="titulo" class="text-2xl font-semibold text-green-600">Cardápio da Cantina</h1>
-      <p class="text-sm text-slate-500">Cadastro de lanches (manhã/tarde) - Colégio Imperatriz. Exporta PNG responsivo. (v 2.5)</p>
+      <p class="text-sm text-slate-500">Cadastro de lanches (manhã/tarde) - Colégio Imperatriz. Exporta PNG responsivo. (v 2.1)</p>
     </div>
     <div class="space-x-2">
       <button onclick="changeMonth(-1)" class="btn">◀</button>
@@ -373,31 +373,36 @@ async function generatePDF() {
     const imgData = canvas.toDataURL("image/png");
 
     // === Geração PDF ===
-    const pdf = new window.jspdf.jsPDF("landscape", "mm", "a4");
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+const pdf = new window.jspdf.jsPDF("landscape", "mm", "a4");
+const pageWidth = pdf.internal.pageSize.getWidth();
+const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const ratio = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
-    const imgWidth = canvas.width * ratio;
-    const imgHeight = canvas.height * ratio;
+const margin = 5; // mm
+const ratio = Math.min(
+  (pageWidth - margin * 2) / canvas.width,
+  (pageHeight - margin * 2) / canvas.height
+);
+const imgWidth = canvas.width * ratio;
+const imgHeight = canvas.height * ratio;
+const x = margin;
+const y = margin;
 
-    const x = (pageWidth - imgWidth) / 2;
-    const y = (pageHeight - imgHeight) / 2;
+pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+pdf.save(`cantina-${year}-${String(viewDate.getMonth() + 1).padStart(2, "0")}.pdf`);
 
-    pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
-    pdf.save(`cantina-${year}-${String(viewDate.getMonth()+1).padStart(2,"0")}.pdf`);
-
-    wrapper.remove();
-  } catch (err) {
-    console.error("[exportPDF] erro ao gerar PDF:", err);
-    alert("Erro ao gerar PDF. Veja o console para detalhes.");
-  } finally {
-    pdfBtn.disabled = false;
-    pdfBtn.textContent = originalText;
-  }
+wrapper.remove();
+} catch (err) {
+  console.error("[exportPDF] erro ao gerar PDF:", err);
+  alert("Erro ao gerar PDF. Veja o console para detalhes.");
+} finally {
+  pdfBtn.disabled = false;
+  pdfBtn.textContent = originalText;
 }
+}
+
 // ====== inicializa ======
 loadData();
 </script>
+
 </body>
 </html>
