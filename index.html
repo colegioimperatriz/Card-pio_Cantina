@@ -79,15 +79,34 @@ function renderCalendar() {
   const month = viewDate.getMonth();
   titulo.textContent = `Cardápio da Cantina — ${viewDate.toLocaleString("pt-BR", { month: "long" })} ${year}`;
   calendarGrid.innerHTML = "";
+
+  const firstDay = new Date(year, month, 1);
+  let startWeekday = firstDay.getDay(); // 0=Dom, 1=Seg, ..., 6=Sab
+
+  // Ajustar para que Segunda seja 0 e Domingo fique fora
+  startWeekday = (startWeekday + 6) % 7;
+
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Cria espaços vazios até o primeiro dia real
+  for (let i = 0; i < startWeekday; i++) {
+    const empty = document.createElement("div");
+    empty.className = "p-2 min-h-[100px]";
+    calendarGrid.appendChild(empty);
+  }
+
   for (let d = 1; d <= daysInMonth; d++) {
     const iso = formatISO(year, month, d);
     const entry = menuData[iso] || {};
     const div = document.createElement("div");
-    div.className = "p-2 border rounded bg-white min-h-[100px] text-sm";
-    div.innerHTML = `<div class="font-semibold">${d}</div>
-      <div class="mt-1">${entry.manha ? `<b>Manhã:</b> ${entry.manha}` : "<span class='text-slate-400'>Clique para editar</span>"}</div>
-      ${entry.tarde ? `<div><b>Tarde:</b> ${entry.tarde}</div>` : ""}`;
+    div.className = "p-2 border rounded bg-white min-h-[100px] text-sm hover:bg-green-50 transition";
+    div.innerHTML = `
+      <div class="font-semibold">${d}</div>
+      <div class="mt-1">
+        ${entry.manha ? `<b>Manhã:</b> ${entry.manha}` : "<span class='text-slate-400'>Clique para editar</span>"}
+      </div>
+      ${entry.tarde ? `<div><b>Tarde:</b> ${entry.tarde}</div>` : ""}
+    `;
     calendarGrid.appendChild(div);
   }
 }
