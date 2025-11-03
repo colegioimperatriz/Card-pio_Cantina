@@ -20,7 +20,7 @@
       <div>
         <h1 id="titulo" class="text-2xl font-semibold text-green-600">Cardápio da Cantina</h1>
         <p class="text-sm text-slate-500">
-          Cadastro de lanches (manhã/tarde) - Colégio Imperatriz 🍽️🥗🍖🍊🍮 (v1.3)
+          Cadastro de lanches (manhã/tarde) - Colégio Imperatriz 🍽️🥗🍖🍊🍮
         </p>
       </div>
     </div>
@@ -35,7 +35,7 @@
 
   <!-- ====== CALENDÁRIO ====== -->
   <div id="calendar" class="p-4 bg-white rounded-2xl shadow-md">
-    <div class="grid grid-cols-6 gap-2 text-center mb-2 font-medium">
+    <div class="grid grid-cols-6 gap-2 text-center mb-2 font-medium text-base">
       <div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
     </div>
     <div id="calendar-grid" class="grid grid-cols-6 gap-2"></div>
@@ -65,12 +65,10 @@
 </style>
 
 <script>
-/* ====== SUPABASE CONFIG ====== */
 const SUPABASE_URL = "https://lfhgyyhzvhmdphgbvblc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmaGd5eWh6dmhtZHBoZ2J2YmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MzEzOTYsImV4cCI6MjA3NTUwNzM5Nn0.ZAcoIbeOQFIo01qW_rcKIkJKvneqgeN6rpPSCFvTe1Y";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ====== VARIÁVEIS ====== */
 const calendarGrid = document.getElementById("calendar-grid");
 const titulo = document.getElementById("titulo");
 let viewDate = new Date();
@@ -78,7 +76,6 @@ viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
 let menuData = {};
 let currentISO = "";
 
-/* ====== FUNÇÕES DE UTILIDADE ====== */
 function formatISO(y, m, d) {
   return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 }
@@ -86,7 +83,6 @@ function escapeHtml(str) {
   return str ? str.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])) : "";
 }
 
-/* ====== CARREGAR DADOS ====== */
 async function loadData() {
   const { data, error } = await supabaseClient.from("cardapio_cantina").select("data_iso, manha, tarde");
   if (error) return console.error(error);
@@ -95,7 +91,6 @@ async function loadData() {
   renderCalendar();
 }
 
-/* ====== RENDERIZAR CALENDÁRIO ====== */
 function renderCalendar() {
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -112,10 +107,9 @@ function renderCalendar() {
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dt = new Date(year, month, d);
-    const weekday = dt.getDay(); // 0=Dom,1=Seg,...,6=Sáb
-    if (weekday === 0) continue; // pula domingo
+    const weekday = dt.getDay(); 
+    if (weekday === 0) continue;
     const col = weekday - 1;
-
     if (filledCols > col) while (filledCols < 6) calendarGrid.appendChild(createEmptyCell()), filledCols++;
     if (filledCols >= 6) filledCols = 0;
     while (filledCols < col) calendarGrid.appendChild(createEmptyCell()), filledCols++;
@@ -123,15 +117,15 @@ function renderCalendar() {
     const iso = formatISO(year, month, d);
     const entry = menuData[iso] || {};
     const div = document.createElement("div");
-    div.className = "p-2 border rounded bg-white min-h-[100px] text-sm shadow-sm hover:shadow-md transition";
+    div.className = "p-3 border rounded bg-white min-h-[110px] text-base shadow-sm hover:shadow-md transition";
     div.innerHTML = `
       <div class="flex justify-between items-start">
-        <div class="text-sm font-semibold">${d}</div>
+        <div class="font-semibold">${d}</div>
         <div class="text-xs text-slate-400">${dt.toLocaleDateString()}</div>
       </div>
-      <div class="text-left whitespace-pre-wrap break-words mt-1 space-y-1">
-        ${entry.manha ? `<div><span class='font-semibold'>Manhã:</span> ${escapeHtml(entry.manha)}</div>` : `<div class='text-slate-400'>Clique para editar</div>`}
-        ${entry.tarde ? `<div><span class='font-semibold'>Tarde:</span> ${escapeHtml(entry.tarde)}</div>` : ``}
+      <div class="text-left whitespace-pre-wrap break-words mt-1">
+        ${entry.manha ? `<div><b>Manhã:</b> ${escapeHtml(entry.manha)}</div>` : `<div class='text-slate-400'>Clique para editar</div>`}
+        ${entry.tarde ? `<div><b>Tarde:</b> ${escapeHtml(entry.tarde)}</div>` : ``}
       </div>
       <div class="text-right mt-2">
         <button onclick="openModalForDay('${iso}')" class="text-xs underline text-green-700">Editar</button>
@@ -142,7 +136,6 @@ function renderCalendar() {
   while (filledCols > 0 && filledCols < 6) calendarGrid.appendChild(createEmptyCell()), filledCols++;
 }
 
-/* ====== MODAL ====== */
 function openModalForDay(iso) {
   currentISO = iso;
   const entry = menuData[iso] || {};
@@ -154,8 +147,6 @@ function openModalForDay(iso) {
 function closeModal() {
   document.getElementById("modal").classList.add("hidden");
 }
-
-/* ====== SALVAR E EXCLUIR ====== */
 async function saveDay() {
   const manha = document.getElementById("manha").value.trim();
   const tarde = document.getElementById("tarde").value.trim();
@@ -167,22 +158,18 @@ document.getElementById("deleteBtn").onclick = async () => {
   await supabaseClient.from("cardapio_cantina").delete().eq("data_iso", currentISO);
   closeModal(); loadData();
 };
-
-/* ====== NAVEGAÇÃO ====== */
 function changeMonth(delta){ viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+delta,1); renderCalendar();}
 function goToday(){ const d=new Date(); viewDate=new Date(d.getFullYear(),d.getMonth(),1); renderCalendar();}
 
-/* ====== EXPORTAÇÕES ====== */
 async function prepareExportWrapper(){
   const calendar = document.getElementById("calendar").cloneNode(true);
   calendar.querySelectorAll("button").forEach(b => b.remove());
 
-  // ==== ESTILOS PARA EXPORTAÇÃO ====
   const style = document.createElement("style");
   style.textContent = `
-    * { font-size: 14px !important; }
-    #calendar-grid { gap: 2px !important; }
-    #calendar-grid > div { padding: 4px !important; min-height: 60px !important; }
+    * { font-size: 16px !important; line-height: 1.4; }
+    #calendar-grid { gap: 4px !important; }
+    #calendar-grid > div { padding: 6px !important; min-height: 95px !important; }
     header, .text-slate-500 { display: none !important; }
   `;
   calendar.prepend(style);
@@ -191,15 +178,16 @@ async function prepareExportWrapper(){
   wrap.style.position = "absolute";
   wrap.style.left = "-9999px";
   wrap.style.background = "white";
-  wrap.style.padding = "10px"; 
-  wrap.style.borderRadius = "10px";
+  wrap.style.padding = "20px"; 
+  wrap.style.borderRadius = "12px";
+  wrap.style.width = "1500px"; 
 
   const header = document.createElement("div");
-  header.className = "flex items-center gap-3 mb-2";
-  header.innerHTML = `<img src='https://i.ibb.co/KxSrH0Nj/logo.png' class='h-10'>
+  header.className = "flex items-center gap-3 mb-3";
+  header.innerHTML = `<img src='https://i.ibb.co/KxSrH0Nj/logo.png' class='h-12'>
     <div>
-      <h2 class='text-green-600 text-lg font-bold'>Cardápio da Cantina — ${viewDate.toLocaleString("pt-BR",{month:"long"})}/${viewDate.getFullYear()}</h2>
-      <div>🍽️🥗🍖🍊🍮</div>
+      <h2 class='text-green-600 text-2xl font-bold'>Cardápio da Cantina — ${viewDate.toLocaleString("pt-BR",{month:"long"})}/${viewDate.getFullYear()}</h2>
+      <div class='text-lg'>🍽️🥗🍖🍊🍮</div>
     </div>`;
   
   wrap.appendChild(header);
@@ -211,7 +199,7 @@ async function prepareExportWrapper(){
 
 async function generateImage(){
   const {wrap} = await prepareExportWrapper();
-  const canvas = await html2canvas(wrap,{scale:2,backgroundColor:"#fff",useCORS:true});
+  const canvas = await html2canvas(wrap,{scale:3,backgroundColor:"#fff",useCORS:true});
   const link = document.createElement("a");
   link.href = canvas.toDataURL("image/png");
   link.download = `cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.png`;
@@ -221,11 +209,15 @@ async function generateImage(){
 
 async function generatePDF(){
   const {wrap} = await prepareExportWrapper();
-  const canvas = await html2canvas(wrap,{scale:2,backgroundColor:"#fff",useCORS:true});
+  const canvas = await html2canvas(wrap,{scale:3,backgroundColor:"#fff",useCORS:true});
   const img = canvas.toDataURL("image/png");
   const pdf = new window.jspdf.jsPDF("landscape","mm","a4");
   const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
-  pdf.addImage(img,"PNG",0,0,w,h); // ocupa toda a página
+  const imgProps = pdf.getImageProperties(img);
+  const ratio = Math.min(w / imgProps.width, h / imgProps.height);
+  const newW = imgProps.width * ratio;
+  const newH = imgProps.height * ratio;
+  pdf.addImage(img,"PNG",(w-newW)/2,(h-newH)/2,newW,newH);
   pdf.save(`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.pdf`);
   wrap.remove();
 }
