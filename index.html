@@ -20,7 +20,7 @@
       <div>
         <h1 id="titulo" class="text-2xl font-semibold text-green-600">Cardápio da Cantina</h1>
         <p class="text-sm text-slate-500">
-          Cadastro de lanches (manhã/tarde) - Colégio Imperatriz 🍽️🥗🍖🍊🍮
+          Cadastro de lanches (manhã/tarde) - Colégio Imperatriz 🍽️🥗🍖🍊🍮 (v1.3)
         </p>
       </div>
     </div>
@@ -174,39 +174,58 @@ function goToday(){ const d=new Date(); viewDate=new Date(d.getFullYear(),d.getM
 
 /* ====== EXPORTAÇÕES ====== */
 async function prepareExportWrapper(){
-  const calendar=document.getElementById("calendar").cloneNode(true);
-  calendar.querySelectorAll("button").forEach(b=>b.remove());
-  const wrap=document.createElement("div");
-  wrap.style.position="absolute";wrap.style.left="-9999px";wrap.style.background="white";wrap.style.padding="30px";wrap.style.borderRadius="20px";
-  const header=document.createElement("div");
-  header.className="flex items-center gap-3 mb-4";
-  header.innerHTML=`<img src='https://i.ibb.co/KxSrH0Nj/logo.png' class='h-12'>
-    <div><h2 class='text-green-600 text-xl font-bold'>Cardápio da Cantina — ${viewDate.toLocaleString("pt-BR",{month:"long"})}/${viewDate.getFullYear()}</h2>
-    <div>🍽️🥗🍖🍊🍮</div></div>`;
-  wrap.appendChild(header); wrap.appendChild(calendar);
+  const calendar = document.getElementById("calendar").cloneNode(true);
+  calendar.querySelectorAll("button").forEach(b => b.remove());
+
+  // ==== ESTILOS PARA EXPORTAÇÃO ====
+  const style = document.createElement("style");
+  style.textContent = `
+    * { font-size: 14px !important; }
+    #calendar-grid { gap: 2px !important; }
+    #calendar-grid > div { padding: 4px !important; min-height: 60px !important; }
+    header, .text-slate-500 { display: none !important; }
+  `;
+  calendar.prepend(style);
+
+  const wrap = document.createElement("div");
+  wrap.style.position = "absolute";
+  wrap.style.left = "-9999px";
+  wrap.style.background = "white";
+  wrap.style.padding = "10px"; 
+  wrap.style.borderRadius = "10px";
+
+  const header = document.createElement("div");
+  header.className = "flex items-center gap-3 mb-2";
+  header.innerHTML = `<img src='https://i.ibb.co/KxSrH0Nj/logo.png' class='h-10'>
+    <div>
+      <h2 class='text-green-600 text-lg font-bold'>Cardápio da Cantina — ${viewDate.toLocaleString("pt-BR",{month:"long"})}/${viewDate.getFullYear()}</h2>
+      <div>🍽️🥗🍖🍊🍮</div>
+    </div>`;
+  
+  wrap.appendChild(header);
+  wrap.appendChild(calendar);
   document.body.appendChild(wrap);
-  await new Promise(r=>setTimeout(r,150));
+  await new Promise(r => setTimeout(r, 150));
   return {wrap};
 }
 
 async function generateImage(){
-  const {wrap}=await prepareExportWrapper();
-  const canvas=await html2canvas(wrap,{scale:2,backgroundColor:"#fff",useCORS:true});
-  const link=document.createElement("a");
-  link.href=canvas.toDataURL("image/png");
-  link.download=`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.png`;
-  link.click(); wrap.remove();
+  const {wrap} = await prepareExportWrapper();
+  const canvas = await html2canvas(wrap,{scale:2,backgroundColor:"#fff",useCORS:true});
+  const link = document.createElement("a");
+  link.href = canvas.toDataURL("image/png");
+  link.download = `cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.png`;
+  link.click();
+  wrap.remove();
 }
 
 async function generatePDF(){
-  const {wrap}=await prepareExportWrapper();
-  const canvas=await html2canvas(wrap,{scale:2,backgroundColor:"#fff",useCORS:true});
-  const img=canvas.toDataURL("image/png");
-  const pdf=new window.jspdf.jsPDF("landscape","mm","a4");
-  const w=pdf.internal.pageSize.getWidth(),h=pdf.internal.pageSize.getHeight();
-  const ratio=Math.min(w/canvas.width,h/canvas.height);
-  const iw=canvas.width*ratio,ih=canvas.height*ratio;
-  pdf.addImage(img,"PNG",(w-iw)/2,(h-ih)/2,iw,ih,"","FAST");
+  const {wrap} = await prepareExportWrapper();
+  const canvas = await html2canvas(wrap,{scale:2,backgroundColor:"#fff",useCORS:true});
+  const img = canvas.toDataURL("image/png");
+  const pdf = new window.jspdf.jsPDF("landscape","mm","a4");
+  const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
+  pdf.addImage(img,"PNG",0,0,w,h); // ocupa toda a página
   pdf.save(`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.pdf`);
   wrap.remove();
 }
