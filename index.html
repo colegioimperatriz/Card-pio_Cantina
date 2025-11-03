@@ -161,16 +161,33 @@ document.getElementById("deleteBtn").onclick = async () => {
 function changeMonth(delta){ viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+delta,1); renderCalendar();}
 function goToday(){ const d=new Date(); viewDate=new Date(d.getFullYear(),d.getMonth(),1); renderCalendar();}
 
+/* ====== EXPORTAÇÃO AJUSTADA ====== */
 async function prepareExportWrapper(){
   const calendar = document.getElementById("calendar").cloneNode(true);
   calendar.querySelectorAll("button").forEach(b => b.remove());
 
   const style = document.createElement("style");
   style.textContent = `
-    * { font-size: 16px !important; line-height: 1.4; }
-    #calendar-grid { gap: 4px !important; }
-    #calendar-grid > div { padding: 6px !important; min-height: 95px !important; }
-    header, .text-slate-500 { display: none !important; }
+    * {
+      font-size: 18px !important;
+      line-height: 1.3 !important;
+    }
+    #calendar-grid {
+      gap: 2px !important;
+    }
+    #calendar-grid > div {
+      padding: 4px 6px !important;
+      min-height: 85px !important;
+    }
+    #calendar {
+      padding: 8px !important;
+    }
+    h2 {
+      font-size: 1.8rem !important;
+    }
+    header, .text-slate-500 {
+      display: none !important;
+    }
   `;
   calendar.prepend(style);
 
@@ -180,7 +197,7 @@ async function prepareExportWrapper(){
   wrap.style.background = "white";
   wrap.style.padding = "20px"; 
   wrap.style.borderRadius = "12px";
-  wrap.style.width = "1500px"; 
+  wrap.style.width = "1800px"; 
 
   const header = document.createElement("div");
   header.className = "flex items-center gap-3 mb-3";
