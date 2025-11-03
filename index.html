@@ -9,14 +9,20 @@
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
+<body class="bg-slate-100 p-4 font-sans">
 
-<body class="bg-slate-100 p-4">
-
+<!-- ====== CONTAINER PRINCIPAL ====== -->
 <div class="max-w-6xl mx-auto">
+  <!-- ====== CABEÇALHO ====== -->
   <header class="flex flex-wrap items-center justify-between mb-4 gap-2">
-    <div>
-      <h1 id="titulo" class="text-2xl font-semibold text-green-600">Cardápio da Cantina</h1>
-      <p class="text-sm text-slate-500">Cadastro de lanches (manhã/tarde) - Colégio Imperatriz. (v3.1)</p>
+    <div class="flex items-center gap-3">
+      <img src="https://i.ibb.co/KxSrH0Nj/logo.png" alt="Logo" class="h-12" />
+      <div>
+        <h1 id="titulo" class="text-2xl font-semibold text-green-600">Cardápio da Cantina</h1>
+        <p class="text-sm text-slate-500">
+          Cadastro de lanches (manhã/tarde) - Colégio Imperatriz 🍽️🥗🍖🍊🍮
+        </p>
+      </div>
     </div>
     <div class="space-x-2">
       <button onclick="changeMonth(-1)" class="btn">◀</button>
@@ -27,7 +33,8 @@
     </div>
   </header>
 
-  <div id="calendar" class="p-4 bg-white rounded-2xl shadow">
+  <!-- ====== CALENDÁRIO ====== -->
+  <div id="calendar" class="p-4 bg-white rounded-2xl shadow-md">
     <div class="grid grid-cols-6 gap-2 text-center mb-2 font-medium">
       <div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
     </div>
@@ -35,27 +42,20 @@
   </div>
 </div>
 
-<!-- Modal -->
-<div id="editModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-  <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-    <h2 id="modalTitle" class="text-lg font-semibold mb-4 text-green-700">Editar dia</h2>
-    <form id="editForm" class="space-y-3">
-      <div>
-        <label class="block text-sm font-medium text-slate-600">Lanche da Manhã</label>
-        <textarea id="manhaInput" class="w-full border rounded p-2 text-sm" rows="2"></textarea>
+<!-- ====== MODAL DE EDIÇÃO ====== -->
+<div id="modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-xl shadow-xl w-96 space-y-4">
+    <h2 class="text-lg font-semibold text-green-600">Editar Cardápio</h2>
+    <p id="modal-date" class="text-sm text-slate-500"></p>
+    <textarea id="manha" placeholder="Lanche da manhã..." class="w-full border rounded p-2 h-20"></textarea>
+    <textarea id="tarde" placeholder="Lanche da tarde..." class="w-full border rounded p-2 h-20"></textarea>
+    <div class="flex justify-between">
+      <button id="deleteBtn" class="px-3 py-1 bg-red-500 text-white rounded">Excluir</button>
+      <div class="space-x-2">
+        <button onclick="closeModal()" class="btn">Cancelar</button>
+        <button onclick="saveDay()" class="btn-primary">Salvar</button>
       </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-600">Lanche da Tarde</label>
-        <textarea id="tardeInput" class="w-full border rounded p-2 text-sm" rows="2"></textarea>
-      </div>
-      <div class="flex justify-between items-center mt-4">
-        <button type="button" onclick="deleteEntry()" class="text-red-600 underline text-sm">Excluir</button>
-        <div class="space-x-2">
-          <button type="button" onclick="closeModal()" class="btn">Cancelar</button>
-          <button type="submit" class="btn-primary">Salvar</button>
-        </div>
-      </div>
-    </form>
+    </div>
   </div>
 </div>
 
@@ -65,163 +65,150 @@
 </style>
 
 <script>
+/* ====== SUPABASE CONFIG ====== */
 const SUPABASE_URL = "https://lfhgyyhzvhmdphgbvblc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmaGd5eWh6dmhtZHBoZ2J2YmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MzEzOTYsImV4cCI6MjA3NTUwNzM5Nn0.ZAcoIbeOQFIo01qW_rcKIkJKvneqgeN6rpPSCFvTe1Y";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+/* ====== VARIÁVEIS ====== */
 const calendarGrid = document.getElementById("calendar-grid");
 const titulo = document.getElementById("titulo");
-
 let viewDate = new Date();
 viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
 let menuData = {};
-let currentISO = null;
+let currentISO = "";
 
+/* ====== FUNÇÕES DE UTILIDADE ====== */
 function formatISO(y, m, d) {
   return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 }
+function escapeHtml(str) {
+  return str ? str.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])) : "";
+}
 
+/* ====== CARREGAR DADOS ====== */
 async function loadData() {
-  const { data, error } = await supabaseClient
-    .from("cardapio_cantina")
-    .select("data_iso, manha, tarde");
-  if (error) console.error(error);
+  const { data, error } = await supabaseClient.from("cardapio_cantina").select("data_iso, manha, tarde");
+  if (error) return console.error(error);
   menuData = {};
-  data.forEach(row => menuData[row.data_iso] = { manha: row.manha, tarde: row.tarde });
+  data.forEach(r => menuData[r.data_iso] = { manha: r.manha, tarde: r.tarde });
   renderCalendar();
 }
 
+/* ====== RENDERIZAR CALENDÁRIO ====== */
 function renderCalendar() {
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
-  titulo.textContent = `Cardápio da Cantina — ${viewDate.toLocaleString("pt-BR", { month: "long" })} ${year}`;
+  titulo.textContent = `Cardápio da Cantina — ${viewDate.toLocaleString("pt-BR",{month:"long"})} ${year}`;
   calendarGrid.innerHTML = "";
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   let filledCols = 0;
-  function emptyCell() {
-    const e = document.createElement("div");
-    e.className = "p-2 min-h-[100px]";
-    return e;
-  }
+  const createEmptyCell = () => {
+    const div = document.createElement("div");
+    div.className = "p-2 min-h-[100px]";
+    return div;
+  };
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dt = new Date(year, month, d);
-    const weekday = dt.getDay();
-    if (weekday === 0) continue;
+    const weekday = dt.getDay(); // 0=Dom,1=Seg,...,6=Sáb
+    if (weekday === 0) continue; // pula domingo
     const col = weekday - 1;
-    if (filledCols <= col) {
-      while (filledCols < col) { calendarGrid.appendChild(emptyCell()); filledCols++; }
-      addDay(d, year, month, dt); filledCols++;
-    } else {
-      while (filledCols < 6) { calendarGrid.appendChild(emptyCell()); filledCols++; }
-      filledCols = 0;
-      while (filledCols < col) { calendarGrid.appendChild(emptyCell()); filledCols++; }
-      addDay(d, year, month, dt); filledCols++;
-    }
+
+    if (filledCols > col) while (filledCols < 6) calendarGrid.appendChild(createEmptyCell()), filledCols++;
+    if (filledCols >= 6) filledCols = 0;
+    while (filledCols < col) calendarGrid.appendChild(createEmptyCell()), filledCols++;
+
+    const iso = formatISO(year, month, d);
+    const entry = menuData[iso] || {};
+    const div = document.createElement("div");
+    div.className = "p-2 border rounded bg-white min-h-[100px] text-sm shadow-sm hover:shadow-md transition";
+    div.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div class="text-sm font-semibold">${d}</div>
+        <div class="text-xs text-slate-400">${dt.toLocaleDateString()}</div>
+      </div>
+      <div class="text-left whitespace-pre-wrap break-words mt-1 space-y-1">
+        ${entry.manha ? `<div><span class='font-semibold'>Manhã:</span> ${escapeHtml(entry.manha)}</div>` : `<div class='text-slate-400'>Clique para editar</div>`}
+        ${entry.tarde ? `<div><span class='font-semibold'>Tarde:</span> ${escapeHtml(entry.tarde)}</div>` : ``}
+      </div>
+      <div class="text-right mt-2">
+        <button onclick="openModalForDay('${iso}')" class="text-xs underline text-green-700">Editar</button>
+      </div>`;
+    calendarGrid.appendChild(div);
+    filledCols++;
   }
-  while (filledCols > 0 && filledCols < 6) { calendarGrid.appendChild(emptyCell()); filledCols++; }
+  while (filledCols > 0 && filledCols < 6) calendarGrid.appendChild(createEmptyCell()), filledCols++;
 }
 
-function addDay(d, year, month, dt) {
-  const iso = formatISO(year, month, d);
-  const entry = menuData[iso] || {};
-  const div = document.createElement("div");
-  div.className = "p-2 border rounded bg-white min-h-[100px] text-sm hover:shadow-md transition";
-  div.innerHTML = `
-    <div class="flex justify-between items-start">
-      <div class="text-sm font-semibold">${d}</div>
-      <div class="text-xs text-slate-400">${dt.toLocaleDateString()}</div>
-    </div>
-    <div class="text-left whitespace-pre-wrap break-words mt-2 space-y-1">
-      ${entry.manha ? `<div><span class='font-semibold'>Manhã:</span> ${escapeHtml(entry.manha)}</div>` : `<div class='text-slate-400 italic'>Clique para editar</div>`}
-      ${entry.tarde ? `<div><span class='font-semibold'>Tarde:</span> ${escapeHtml(entry.tarde)}</div>` : ""}
-    </div>
-    <div class="text-right mt-2">
-      <button onclick="openModalForDay('${iso}')" class="text-xs underline text-green-700">Editar</button>
-    </div>`;
-  calendarGrid.appendChild(div);
-}
-
-function changeMonth(delta){ viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + delta, 1); renderCalendar(); }
-function goToday(){ const d = new Date(); viewDate = new Date(d.getFullYear(), d.getMonth(), 1); renderCalendar(); }
-
-function escapeHtml(text){ return text?.replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])) || ""; }
-
-// MODAL
+/* ====== MODAL ====== */
 function openModalForDay(iso) {
   currentISO = iso;
   const entry = menuData[iso] || {};
-  document.getElementById("modalTitle").textContent = `Editar ${new Date(iso).toLocaleDateString()}`;
-  document.getElementById("manhaInput").value = entry.manha || "";
-  document.getElementById("tardeInput").value = entry.tarde || "";
-  document.getElementById("editModal").classList.remove("hidden");
+  document.getElementById("manha").value = entry.manha || "";
+  document.getElementById("tarde").value = entry.tarde || "";
+  document.getElementById("modal-date").textContent = new Date(iso).toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+  document.getElementById("modal").classList.remove("hidden");
 }
-function closeModal(){ document.getElementById("editModal").classList.add("hidden"); currentISO=null; }
-
-document.getElementById("editForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const manha = document.getElementById("manhaInput").value.trim();
-  const tarde = document.getElementById("tardeInput").value.trim();
-  if (!currentISO) return;
-  const entry = { data_iso: currentISO, manha, tarde };
-  const { error } = await supabaseClient.from("cardapio_cantina").upsert(entry);
-  if (error) alert("Erro ao salvar: " + error.message);
-  else { menuData[currentISO] = { manha, tarde }; renderCalendar(); closeModal(); }
-});
-
-async function deleteEntry() {
-  if (!currentISO) return;
-  if (!confirm("Deseja realmente excluir este dia?")) return;
-  const { error } = await supabaseClient.from("cardapio_cantina").delete().eq("data_iso", currentISO);
-  if (error) alert("Erro ao excluir: " + error.message);
-  else { delete menuData[currentISO]; renderCalendar(); closeModal(); }
+function closeModal() {
+  document.getElementById("modal").classList.add("hidden");
 }
 
-// EXPORT
-async function prepareExportWrapper() {
-  const calendar = document.getElementById("calendar");
-  const clone = calendar.cloneNode(true);
-  clone.querySelectorAll("button").forEach(el => el.remove());
-  const wrapper = document.createElement("div");
-  wrapper.style.position = "absolute";
-  wrapper.style.left = "-9999px";
-  wrapper.style.background = "white";
-  wrapper.style.padding = "40px";
-  wrapper.style.borderRadius = "20px";
-  wrapper.style.fontFamily = "Arial, sans-serif";
-  wrapper.appendChild(clone);
-  document.body.appendChild(wrapper);
-  await new Promise(r => setTimeout(r, 120));
-  return { wrapper };
+/* ====== SALVAR E EXCLUIR ====== */
+async function saveDay() {
+  const manha = document.getElementById("manha").value.trim();
+  const tarde = document.getElementById("tarde").value.trim();
+  await supabaseClient.from("cardapio_cantina").upsert({ data_iso: currentISO, manha, tarde });
+  closeModal(); loadData();
+}
+document.getElementById("deleteBtn").onclick = async () => {
+  if (!confirm("Excluir este dia?")) return;
+  await supabaseClient.from("cardapio_cantina").delete().eq("data_iso", currentISO);
+  closeModal(); loadData();
+};
+
+/* ====== NAVEGAÇÃO ====== */
+function changeMonth(delta){ viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+delta,1); renderCalendar();}
+function goToday(){ const d=new Date(); viewDate=new Date(d.getFullYear(),d.getMonth(),1); renderCalendar();}
+
+/* ====== EXPORTAÇÕES ====== */
+async function prepareExportWrapper(){
+  const calendar=document.getElementById("calendar").cloneNode(true);
+  calendar.querySelectorAll("button").forEach(b=>b.remove());
+  const wrap=document.createElement("div");
+  wrap.style.position="absolute";wrap.style.left="-9999px";wrap.style.background="white";wrap.style.padding="30px";wrap.style.borderRadius="20px";
+  const header=document.createElement("div");
+  header.className="flex items-center gap-3 mb-4";
+  header.innerHTML=`<img src='https://i.ibb.co/KxSrH0Nj/logo.png' class='h-12'>
+    <div><h2 class='text-green-600 text-xl font-bold'>Cardápio da Cantina — ${viewDate.toLocaleString("pt-BR",{month:"long"})}/${viewDate.getFullYear()}</h2>
+    <div>🍽️🥗🍖🍊🍮</div></div>`;
+  wrap.appendChild(header); wrap.appendChild(calendar);
+  document.body.appendChild(wrap);
+  await new Promise(r=>setTimeout(r,150));
+  return {wrap};
 }
 
-async function generateImage() {
-  const btn=document.getElementById("exportBtn"); btn.disabled=true; btn.textContent="Gerando...";
-  try {
-    const { wrapper }=await prepareExportWrapper();
-    const canvas=await html2canvas(wrapper,{scale:2,backgroundColor:"#fff",useCORS:true});
-    const a=document.createElement("a");
-    a.href=canvas.toDataURL("image/png");
-    a.download=`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.png`;
-    a.click(); wrapper.remove();
-  } finally { btn.disabled=false; btn.textContent="Exportar PNG"; }
+async function generateImage(){
+  const {wrap}=await prepareExportWrapper();
+  const canvas=await html2canvas(wrap,{scale:2,backgroundColor:"#fff",useCORS:true});
+  const link=document.createElement("a");
+  link.href=canvas.toDataURL("image/png");
+  link.download=`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.png`;
+  link.click(); wrap.remove();
 }
 
-async function generatePDF() {
-  const btn=document.getElementById("exportPdfBtn"); btn.disabled=true; btn.textContent="Gerando...";
-  try {
-    const { wrapper }=await prepareExportWrapper();
-    const canvas=await html2canvas(wrapper,{scale:2,backgroundColor:"#fff",useCORS:true});
-    const img=canvas.toDataURL("image/png");
-    const pdf=new window.jspdf.jsPDF("landscape","mm","a4");
-    const w=pdf.internal.pageSize.getWidth(), h=pdf.internal.pageSize.getHeight();
-    const ratio=Math.min(w/canvas.width,h/canvas.height);
-    const imgW=canvas.width*ratio, imgH=canvas.height*ratio;
-    pdf.addImage(img,"PNG",(w-imgW)/2,(h-imgH)/2,imgW,imgH,"","FAST");
-    pdf.save(`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.pdf`);
-    wrapper.remove();
-  } finally { btn.disabled=false; btn.textContent="Exportar PDF"; }
+async function generatePDF(){
+  const {wrap}=await prepareExportWrapper();
+  const canvas=await html2canvas(wrap,{scale:2,backgroundColor:"#fff",useCORS:true});
+  const img=canvas.toDataURL("image/png");
+  const pdf=new window.jspdf.jsPDF("landscape","mm","a4");
+  const w=pdf.internal.pageSize.getWidth(),h=pdf.internal.pageSize.getHeight();
+  const ratio=Math.min(w/canvas.width,h/canvas.height);
+  const iw=canvas.width*ratio,ih=canvas.height*ratio;
+  pdf.addImage(img,"PNG",(w-iw)/2,(h-ih)/2,iw,ih,"","FAST");
+  pdf.save(`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.pdf`);
+  wrap.remove();
 }
 
 loadData();
