@@ -20,7 +20,7 @@
       <div>
         <h1 id="titulo" class="text-2xl font-semibold text-green-600">Cardápio da Cantina</h1>
         <p class="text-sm text-slate-500">
-          Cadastro de lanches (manhã/tarde) - Colégio Imperatriz 🍽️🥗🍖🍊🍮 (v1.4)
+          Cadastro de lanches (manhã/tarde) - Colégio Imperatriz 🍽️🥗🍖🍊🍮
         </p>
       </div>
     </div>
@@ -197,7 +197,7 @@ async function prepareExportWrapper(){
   wrap.style.background = "white";
   wrap.style.padding = "20px"; 
   wrap.style.borderRadius = "12px";
-  wrap.style.width = "1800px"; 
+  wrap.style.width = "1400px"; 
 
   const header = document.createElement("div");
   header.className = "flex items-center gap-3 mb-3";
@@ -216,7 +216,7 @@ async function prepareExportWrapper(){
 
 async function generateImage(){
   const {wrap} = await prepareExportWrapper();
-  const canvas = await html2canvas(wrap,{scale:3,backgroundColor:"#fff",useCORS:true});
+ const canvas = await html2canvas(wrap,{scale:1.2,backgroundColor:"#fff",useCORS:true});
   const link = document.createElement("a");
   link.href = canvas.toDataURL("image/png");
   link.download = `cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.png`;
@@ -226,15 +226,15 @@ async function generateImage(){
 
 async function generatePDF(){
   const {wrap} = await prepareExportWrapper();
-  const canvas = await html2canvas(wrap,{scale:3,backgroundColor:"#fff",useCORS:true});
-  const img = canvas.toDataURL("image/png");
+ const canvas = await html2canvas(wrap,{scale:1.2,backgroundColor:"#fff",useCORS:true});
+const img = canvas.toDataURL("image/jpeg", 0.7);
   const pdf = new window.jspdf.jsPDF("landscape","mm","a4");
   const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
   const imgProps = pdf.getImageProperties(img);
   const ratio = Math.min(w / imgProps.width, h / imgProps.height);
   const newW = imgProps.width * ratio;
   const newH = imgProps.height * ratio;
-  pdf.addImage(img,"PNG",(w-newW)/2,(h-newH)/2,newW,newH);
+ pdf.addImage(img,"JPEG",(w-newW)/2,(h-newH)/2,newW,newH);
   pdf.save(`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.pdf`);
   wrap.remove();
 }
