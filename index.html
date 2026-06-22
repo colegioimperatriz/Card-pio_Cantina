@@ -138,10 +138,22 @@ function renderCalendar() {
 
 function openModalForDay(iso) {
   currentISO = iso;
+
   const entry = menuData[iso] || {};
   document.getElementById("manha").value = entry.manha || "";
   document.getElementById("tarde").value = entry.tarde || "";
-  document.getElementById("modal-date").textContent = new Date(iso).toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+
+  const [year, month, day] = iso.split("-").map(Number);
+
+  const dataLocal = new Date(year, month - 1, day);
+
+  document.getElementById("modal-date").textContent =
+    dataLocal.toLocaleDateString("pt-BR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    });
+
   document.getElementById("modal").classList.remove("hidden");
 }
 function closeModal() {
