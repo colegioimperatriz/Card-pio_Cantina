@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>z-Cardápio da Cantina - Colégio Imperatriz</title>
+  <title>wr(1)-Cardápio da Cantina - Colégio Imperatriz</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
@@ -243,7 +243,7 @@ async function generateImage(){
   wrap.remove();
 }
 
-/* ====== EXPORTAÇÃO PDF (NATIVA VIA IMPRESSÃO) ====== */
+/* ====== EXPORTAÇÃO PDF (NATIVA 1 PÁGINA) ====== */
 function generatePDF(){
   const printWindow = window.open("", "_blank");
 
@@ -265,75 +265,110 @@ function generatePDF(){
 <meta charset="UTF-8">
 <title>Cardápio da Cantina</title>
 <style>
-@page{
-    size:A4 landscape;
-    margin:10mm;
+@page {
+    size: A4 landscape;
+    margin: 5mm;
 }
-*{
-    box-sizing:border-box;
+* {
+    box-sizing: border-box;
 }
-body{
-    font-family:Arial, sans-serif;
-    margin:0;
-    color:#1f2937;
+html, body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    color: #1f2937;
+    overflow: hidden;
 }
-.header{
-    display:flex;
-    align-items:center;
-    gap:15px;
-    margin-bottom:15px;
+body {
+    display: flex;
+    flex-direction: column;
 }
-.header img{
-    width:55px;
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
 }
-.title{
-    font-size:24px;
-    font-weight:bold;
-    color:#16a34a;
+.header img {
+    width: 42px;
 }
-.subtitle{
-    font-size:14px;
+.title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #16a34a;
 }
-.calendar{
-    display:grid;
-    grid-template-columns:repeat(6,1fr);
-    gap:6px;
+.subtitle {
+    font-size: 12px;
 }
-.week{
-    text-align:center;
-    font-weight:bold;
-    background:#f1f5f9;
-    padding:6px;
-    border-radius:5px;
+.calendar-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
-.day{
-    border:1px solid #cbd5e1;
-    border-radius:8px;
-    min-height:120px;
-    padding:8px;
-    page-break-inside:avoid;
+.week-header {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+    flex-shrink: 0;
 }
-.day-number{
-    font-size:18px;
-    font-weight:bold;
-    margin-bottom:5px;
+.week {
+    text-align: center;
+    font-weight: bold;
+    background: #f1f5f9;
+    padding: 4px;
+    font-size: 12px;
+    border-radius: 4px;
 }
-.date{
-    font-size:11px;
-    color:#64748b;
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 4px;
+    flex: 1;
 }
-.menu{
-    margin-top:8px;
-    font-size:13px;
-    white-space:pre-wrap;
+.day {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 4px 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
 }
-.empty{
-    visibility:hidden;
+.day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 2px;
+    margin-bottom: 3px;
 }
-@media print{
-    body{
-        -webkit-print-color-adjust:exact;
-        print-color-adjust:exact;
+.day-number {
+    font-size: 14px;
+    font-weight: bold;
+}
+.date {
+    font-size: 10px;
+    color: #64748b;
+}
+.menu {
+    font-size: 11px;
+    line-height: 1.25;
+    white-space: pre-wrap;
+    word-break: break-word;
+    flex: 1;
+}
+.empty {
+    visibility: hidden;
+    border: none;
+}
+@media print {
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 }
 </style>
@@ -341,24 +376,23 @@ body{
 <body>
 
 <div class="header">
-<img src="https://i.ibb.co/KxSrH0Nj/logo.png">
-<div>
-<div class="title">
-Cardápio da Cantina — ${monthName}/${year}
-</div>
-<div class="subtitle">
-🍽️🥗🍖🍊🍮
-</div>
-</div>
+  <img src="https://i.ibb.co/KxSrH0Nj/logo.png">
+  <div>
+    <div class="title">Cardápio da Cantina — ${monthName.toUpperCase()}/${year}</div>
+    <div class="subtitle">🍽️🥗🍖🍊🍮</div>
+  </div>
 </div>
 
-<div class="calendar">
-<div class="week">Seg</div>
-<div class="week">Ter</div>
-<div class="week">Qua</div>
-<div class="week">Qui</div>
-<div class="week">Sex</div>
-<div class="week">Sáb</div>`;
+<div class="calendar-wrapper">
+  <div class="week-header">
+    <div class="week">Seg</div>
+    <div class="week">Ter</div>
+    <div class="week">Qua</div>
+    <div class="week">Qui</div>
+    <div class="week">Sex</div>
+    <div class="week">Sáb</div>
+  </div>
+  <div class="calendar-grid">`;
 
   let filled = 0;
 
@@ -366,11 +400,9 @@ Cardápio da Cantina — ${monthName}/${year}
       const dt = new Date(year,month,d);
       const weekday = dt.getDay();
 
-      if(weekday===0){
-          continue;
-      }
+      if(weekday===0) continue;
 
-      const col = weekday-1;
+      const col = weekday - 1;
 
       while(filled < col){
           html += `<div class="day empty"></div>`;
@@ -381,40 +413,36 @@ Cardápio da Cantina — ${monthName}/${year}
       const entry = menuData[iso] || {};
 
       html += `
-<div class="day">
-<div class="day-number">
-${d}
-</div>
-<div class="date">
-${dt.toLocaleDateString("pt-BR")}
-</div>
-<div class="menu">
-${entry.manha ? `<b>Manhã:</b><br>${escapeHtml(entry.manha)}` : `<span style="color:#94a3b8">Sem cadastro</span>`}
-<br><br>
-${entry.tarde ? `<b>Tarde:</b><br>${escapeHtml(entry.tarde)}` : ``}
-</div>
-</div>`;
+    <div class="day">
+      <div class="day-header">
+        <span class="day-number">${d}</span>
+        <span class="date">${dt.toLocaleDateString("pt-BR")}</span>
+      </div>
+      <div class="menu">
+        ${entry.manha ? `<b>M:</b> ${escapeHtml(entry.manha)}<br>` : ''}
+        ${entry.tarde ? `<b>T:</b> ${escapeHtml(entry.tarde)}` : ''}
+        ${!entry.manha && !entry.tarde ? `<span style="color:#cbd5e1">-</span>` : ''}
+      </div>
+    </div>`;
 
       filled++;
-
-      if(filled===6){
-          filled=0;
-      }
+      if(filled === 6) filled = 0;
   }
 
-  while(filled>0 && filled<6){
+  while(filled > 0 && filled < 6){
       html += `<div class="day empty"></div>`;
       filled++;
   }
 
   html += `
+  </div>
 </div>
 
 <script>
-window.onload=function(){
+window.onload = function(){
     setTimeout(function(){
         window.print();
-    },500);
+    }, 300);
 }
 <\/script>
 </body>
