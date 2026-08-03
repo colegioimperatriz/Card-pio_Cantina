@@ -204,12 +204,18 @@ async function prepareExportWrapper(){
   calendar.prepend(style);
 
   const wrap = document.createElement("div");
-  wrap.style.position = "absolute";
-  wrap.style.left = "-9999px";
-  wrap.style.background = "white";
-  wrap.style.padding = "20px"; 
-  wrap.style.borderRadius = "12px";
-  wrap.style.width = "1400px"; 
+wrap.style.position = "absolute";
+wrap.style.left = "-9999px";
+
+// Tamanho equivalente a uma folha A4 em paisagem
+wrap.style.width = "1123px";
+wrap.style.height = "794px";
+
+wrap.style.background = "#fff";
+wrap.style.padding = "30px";
+wrap.style.boxSizing = "border-box";
+wrap.style.borderRadius = "0";
+wrap.style.overflow = "hidden";
 
   const header = document.createElement("div");
   header.className = "flex items-center gap-3 mb-3";
@@ -221,6 +227,8 @@ async function prepareExportWrapper(){
   
   wrap.appendChild(header);
   wrap.appendChild(calendar);
+  calendar.style.height = "calc(100% - 70px)";
+calendar.style.boxSizing = "border-box";
   document.body.appendChild(wrap);
   await new Promise(r => setTimeout(r, 150));
   return {wrap};
@@ -238,7 +246,13 @@ async function generateImage(){
 
 async function generatePDF(){
   const {wrap} = await prepareExportWrapper();
- const canvas = await html2canvas(wrap,{scale:1.2,backgroundColor:"#fff",useCORS:true});
+const canvas = await html2canvas(wrap,{
+    scale:3,
+    backgroundColor:"#fff",
+    useCORS:true,
+    width:1123,
+    height:794
+});
 const img = canvas.toDataURL("image/jpeg", 0.7);
   const pdf = new window.jspdf.jsPDF("landscape","mm","a4");
   const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
