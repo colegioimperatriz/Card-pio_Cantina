@@ -244,25 +244,40 @@ async function generateImage(){
   wrap.remove();
 }
 
-async function generatePDF(){
-  const {wrap} = await prepareExportWrapper();
-const canvas = await html2canvas(wrap,{
-    scale:3,
-    backgroundColor:"#fff",
-    useCORS:true,
-    width:1123,
-    height:794
-});
-const img = canvas.toDataURL("image/jpeg", 0.7);
-  const pdf = new window.jspdf.jsPDF("landscape","mm","a4");
-  const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
-  const imgProps = pdf.getImageProperties(img);
-  const ratio = Math.min(w / imgProps.width, h / imgProps.height);
-  const newW = imgProps.width * ratio;
-  const newH = imgProps.height * ratio;
- pdf.addImage(img,"JPEG",(w-newW)/2,(h-newH)/2,newW,newH);
-  pdf.save(`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.pdf`);
-  wrap.remove();
+async function generatePDF() {
+
+    const { wrap } = await prepareExportWrapper();
+
+    const canvas = await html2canvas(wrap,{
+        scale:2.5,
+        useCORS:true,
+        backgroundColor:"#fff"
+    });
+
+    const pdf = new jspdf.jsPDF({
+        orientation:"landscape",
+        unit:"mm",
+        format:"a4"
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth - 10;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    pdf.addImage(
+        canvas,
+        "PNG",
+        5,
+        5,
+        imgWidth,
+        imgHeight
+    );
+
+    pdf.save("cardapio.pdf");
+
+    wrap.remove();
 }
 
 loadData();
