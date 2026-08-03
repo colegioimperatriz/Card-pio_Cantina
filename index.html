@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>2Cardápio da Cantina - Colégio Imperatriz</title>
+  <title>Cardápio da Cantina - Colégio Imperatriz</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-slate-100 p-4 font-sans">
 
@@ -144,7 +143,6 @@ function openModalForDay(iso) {
   document.getElementById("tarde").value = entry.tarde || "";
 
   const [year, month, day] = iso.split("-").map(Number);
-
   const dataLocal = new Date(year, month - 1, day);
 
   document.getElementById("modal-date").textContent =
@@ -156,24 +154,28 @@ function openModalForDay(iso) {
 
   document.getElementById("modal").classList.remove("hidden");
 }
+
 function closeModal() {
   document.getElementById("modal").classList.add("hidden");
 }
+
 async function saveDay() {
   const manha = document.getElementById("manha").value.trim();
   const tarde = document.getElementById("tarde").value.trim();
   await supabaseClient.from("cardapio_cantina").upsert({ data_iso: currentISO, manha, tarde });
   closeModal(); loadData();
 }
+
 document.getElementById("deleteBtn").onclick = async () => {
   if (!confirm("Excluir este dia?")) return;
   await supabaseClient.from("cardapio_cantina").delete().eq("data_iso", currentISO);
   closeModal(); loadData();
 };
+
 function changeMonth(delta){ viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+delta,1); renderCalendar();}
 function goToday(){ const d=new Date(); viewDate=new Date(d.getFullYear(),d.getMonth(),1); renderCalendar();}
 
-/* ====== EXPORTAÇÃO AJUSTADA ====== */
+/* ====== EXPORTAÇÃO IMAGEM (PNG) ====== */
 async function prepareExportWrapper(){
   const calendar = document.getElementById("calendar").cloneNode(true);
   calendar.querySelectorAll("button").forEach(b => b.remove());
@@ -181,29 +183,25 @@ async function prepareExportWrapper(){
   const style = document.createElement("style");
   style.textContent = `
     *{
-    font-size:14px !important;
-    line-height:1.15 !important;
-    font-family:Arial,sans-serif;
-}
+      font-size:14px !important;
+      line-height:1.15 !important;
+      font-family:Arial,sans-serif;
+    }
     #calendar-grid {
       gap: 2px !important;
     }
- #calendar-grid > div{
-
-    padding:5px !important;
-
-    min-height:100px !important;
-
-    border:1px solid #d1d5db !important;
-
-}
+    #calendar-grid > div{
+      padding:5px !important;
+      min-height:100px !important;
+      border:1px solid #d1d5db !important;
+    }
     #calendar {
       padding: 8px !important;
     }
     h2{
-    font-size:30px !important;
-    margin-bottom:8px;
-}
+      font-size:30px !important;
+      margin-bottom:8px;
+    }
     header, .text-slate-500 {
       display: none !important;
     }
@@ -211,31 +209,25 @@ async function prepareExportWrapper(){
   calendar.prepend(style);
 
   const wrap = document.createElement("div");
-wrap.style.position = "absolute";
-wrap.style.left = "-9999px";
-
-// Tamanho equivalente a uma folha A4 em paisagem
-wrap.style.width = "1123px";
-//wrap.style.height = "794px";
-
-wrap.style.background = "#fff";
-wrap.style.padding = "30px";
-wrap.style.boxSizing = "border-box";
-wrap.style.borderRadius = "0";
-//wrap.style.overflow = "hidden";
+  wrap.style.position = "absolute";
+  wrap.style.left = "-9999px";
+  wrap.style.width = "1123px";
+  wrap.style.background = "#fff";
+  wrap.style.padding = "30px";
+  wrap.style.boxSizing = "border-box";
+  wrap.style.borderRadius = "0";
 
   const header = document.createElement("div");
   header.className = "flex items-center gap-3 mb-3";
-  header.innerHTML = `<img src='https://i.ibb.co/KxSrH0Nj/logo.png' class='h-12'>
+  header.innerHTML = `
+    <img src='https://i.ibb.co/KxSrH0Nj/logo.png' class='h-12'>
     <div>
       <h2 class='text-green-600 text-2xl font-bold'>Cardápio da Cantina — ${viewDate.toLocaleString("pt-BR",{month:"long"})}/${viewDate.getFullYear()}</h2>
       <div class='text-lg'>🍽️🥗🍖🍊🍮</div>
-    </div>`;
-  
+    </div>`;  
   wrap.appendChild(header);
   wrap.appendChild(calendar);
-  //calendar.style.height = "calc(100% - 70px)";
-calendar.style.boxSizing = "border-box";
+  calendar.style.boxSizing = "border-box";
   document.body.appendChild(wrap);
   await new Promise(r => setTimeout(r, 150));
   return {wrap};
@@ -243,80 +235,197 @@ calendar.style.boxSizing = "border-box";
 
 async function generateImage(){
   const {wrap} = await prepareExportWrapper();
- const canvas = await html2canvas(wrap,{scale:1.2,backgroundColor:"#fff",useCORS:true});
+  const canvas = await html2canvas(wrap,{scale:1.2,backgroundColor:"#fff",useCORS:true});
   const link = document.createElement("a");
   link.href = canvas.toDataURL("image/png");
   link.download = `cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.png`;
   link.click();
   wrap.remove();
 }
-async function generatePDF(){
 
-    const {wrap} = await prepareExportWrapper();
+/* ====== EXPORTAÇÃO PDF (NATIVA VIA IMPRESSÃO) ====== */
+function generatePDF(){
+  const printWindow = window.open("", "_blank");
 
-    const canvas = await html2canvas(wrap,{
-        scale:4,
-        useCORS:true,
-        backgroundColor:"#ffffff",
-        scrollX:0,
-        scrollY:0
-    });
+  if(!printWindow){
+      alert("Permita pop-ups para gerar o PDF.");
+      return;
+  }
 
-    wrap.remove();
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
 
-    const pdf = new jspdf.jsPDF({
-        orientation:"landscape",
-        unit:"mm",
-        format:"a4",
-        compress:true
-    });
+  const monthName = viewDate.toLocaleString("pt-BR",{
+      month:"long"
+  });
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    const margin=5;
-
-    const printableWidth=pageWidth-margin*2;
-    const printableHeight=pageHeight-margin*2;
-
-    const imgRatio=canvas.width/canvas.height;
-    const pageRatio=printableWidth/printableHeight;
-
-    let imgWidth;
-    let imgHeight;
-
-    if(imgRatio>pageRatio){
-
-        imgWidth=printableWidth;
-        imgHeight=imgWidth/imgRatio;
-
-    }else{
-
-        imgHeight=printableHeight;
-        imgWidth=imgHeight*imgRatio;
-
-    }
-
-    const x=(pageWidth-imgWidth)/2;
-    const y=(pageHeight-imgHeight)/2;
-
-    pdf.addImage(
-        canvas.toDataURL("image/png"),
-        "PNG",
-        x,
-        y,
-        imgWidth,
-        imgHeight,
-        "",
-        "FAST"
-    );
-
-    pdf.save(`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.pdf`);
-
+  let html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cardápio da Cantina</title>
+<style>
+@page{
+    size:A4 landscape;
+    margin:10mm;
 }
+*{
+    box-sizing:border-box;
+}
+body{
+    font-family:Arial, sans-serif;
+    margin:0;
+    color:#1f2937;
+}
+.header{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    margin-bottom:15px;
+}
+.header img{
+    width:55px;
+}
+.title{
+    font-size:24px;
+    font-weight:bold;
+    color:#16a34a;
+}
+.subtitle{
+    font-size:14px;
+}
+.calendar{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:6px;
+}
+.week{
+    text-align:center;
+    font-weight:bold;
+    background:#f1f5f9;
+    padding:6px;
+    border-radius:5px;
+}
+.day{
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    min-height:120px;
+    padding:8px;
+    page-break-inside:avoid;
+}
+.day-number{
+    font-size:18px;
+    font-weight:bold;
+    margin-bottom:5px;
+}
+.date{
+    font-size:11px;
+    color:#64748b;
+}
+.menu{
+    margin-top:8px;
+    font-size:13px;
+    white-space:pre-wrap;
+}
+.empty{
+    visibility:hidden;
+}
+@media print{
+    body{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+    }
+}
+</style>
+</head>
+<body>
 
+<div class="header">
+<img src="https://i.ibb.co/KxSrH0Nj/logo.png">
+<div>
+<div class="title">
+Cardápio da Cantina — ${monthName}/${year}
+</div>
+<div class="subtitle">
+🍽️🥗🍖🍊🍮
+</div>
+</div>
+</div>
+
+<div class="calendar">
+<div class="week">Seg</div>
+<div class="week">Ter</div>
+<div class="week">Qua</div>
+<div class="week">Qui</div>
+<div class="week">Sex</div>
+<div class="week">Sáb</div>`;
+
+  let filled = 0;
+
+  for(let d=1; d<=new Date(year,month+1,0).getDate(); d++){
+      const dt = new Date(year,month,d);
+      const weekday = dt.getDay();
+
+      if(weekday===0){
+          continue;
+      }
+
+      const col = weekday-1;
+
+      while(filled < col){
+          html += `<div class="day empty"></div>`;
+          filled++;
+      }
+
+      const iso = formatISO(year,month,d);
+      const entry = menuData[iso] || {};
+
+      html += `
+<div class="day">
+<div class="day-number">
+${d}
+</div>
+<div class="date">
+${dt.toLocaleDateString("pt-BR")}
+</div>
+<div class="menu">
+${entry.manha ? `<b>Manhã:</b><br>${escapeHtml(entry.manha)}` : `<span style="color:#94a3b8">Sem cadastro</span>`}
+<br><br>
+${entry.tarde ? `<b>Tarde:</b><br>${escapeHtml(entry.tarde)}` : ``}
+</div>
+</div>`;
+
+      filled++;
+
+      if(filled===6){
+          filled=0;
+      }
+  }
+
+  while(filled>0 && filled<6){
+      html += `<div class="day empty"></div>`;
+      filled++;
+  }
+
+  html += `
+</div>
+
+<script>
+window.onload=function(){
+    setTimeout(function(){
+        window.print();
+    },500);
+}
+<\/script>
+</body>
+</html>`;
+
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+}
 
 loadData();
 </script>
- </body>
+</body>
 </html>
