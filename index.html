@@ -264,7 +264,7 @@ function generatePDF(){
 <style>
 @page {
     size: A4 landscape;
-    margin: 6mm;
+    margin: 4mm;
 }
 * {
     box-sizing: border-box;
@@ -281,43 +281,48 @@ html, body {
 body {
     display: flex;
     flex-direction: column;
+    padding: 2mm;
 }
 .header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     flex-shrink: 0;
 }
 .header img {
-    height: 38px;
+    width: 40px;
+    height: auto;
 }
 .title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     color: #16a34a;
+    line-height: 1.1;
 }
 .subtitle {
-    font-size: 11px;
+    font-size: 10px;
+    line-height: 1;
 }
 .calendar-container {
     flex: 1;
     display: flex;
     flex-direction: column;
+    max-height: 94vh;
 }
 .week-header {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 3px;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     flex-shrink: 0;
 }
 .week {
     text-align: center;
     font-weight: bold;
     background: #e2e8f0;
-    padding: 3px;
-    font-size: 11px;
+    padding: 2px;
+    font-size: 10px;
     border-radius: 3px;
 }
 .calendar-grid {
@@ -330,7 +335,7 @@ body {
 .day {
     border: 1px solid #cbd5e1;
     border-radius: 4px;
-    padding: 3px 4px;
+    padding: 2px 4px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -345,16 +350,16 @@ body {
     margin-bottom: 2px;
 }
 .day-number {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
 }
 .date {
-    font-size: 9px;
+    font-size: 8.5px;
     color: #64748b;
 }
 .menu {
-    font-size: 9.5px;
-    line-height: 1.15;
+    font-size: 8.5px;
+    line-height: 1.1;
     white-space: pre-wrap;
     word-break: break-word;
     flex: 1;
@@ -374,7 +379,7 @@ body {
 <body>
 
 <div class="header">
-  <img src="https://i.ibb.co/gMKBY30P/Icone-CItransparente.png">
+  <img src="https://i.ibb.co/gMKBY30P/Icone-CItransparente.png" alt="Logo">
   <div>
     <div class="title">Cardápio da Cantina — ${monthName.toUpperCase()}/${year}</div>
     <div class="subtitle">🍽️🥗🍖🍊🍮</div>
