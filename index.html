@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>wCardápio da Cantina - Colégio Imperatriz</title>
+  <title>2Cardápio da Cantina - Colégio Imperatriz</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
@@ -180,23 +180,30 @@ async function prepareExportWrapper(){
 
   const style = document.createElement("style");
   style.textContent = `
-    * {
-      font-size: 18px !important;
-      line-height: 1.3 !important;
-    }
+    *{
+    font-size:14px !important;
+    line-height:1.15 !important;
+    font-family:Arial,sans-serif;
+}
     #calendar-grid {
       gap: 2px !important;
     }
-    #calendar-grid > div {
-      padding: 4px 6px !important;
-      min-height: 85px !important;
-    }
+ #calendar-grid > div{
+
+    padding:5px !important;
+
+    min-height:100px !important;
+
+    border:1px solid #d1d5db !important;
+
+}
     #calendar {
       padding: 8px !important;
     }
-    h2 {
-      font-size: 1.8rem !important;
-    }
+    h2{
+    font-size:30px !important;
+    margin-bottom:8px;
+}
     header, .text-slate-500 {
       display: none !important;
     }
@@ -209,13 +216,13 @@ wrap.style.left = "-9999px";
 
 // Tamanho equivalente a uma folha A4 em paisagem
 wrap.style.width = "1123px";
-wrap.style.height = "794px";
+//wrap.style.height = "794px";
 
 wrap.style.background = "#fff";
 wrap.style.padding = "30px";
 wrap.style.boxSizing = "border-box";
 wrap.style.borderRadius = "0";
-wrap.style.overflow = "hidden";
+//wrap.style.overflow = "hidden";
 
   const header = document.createElement("div");
   header.className = "flex items-center gap-3 mb-3";
@@ -227,7 +234,7 @@ wrap.style.overflow = "hidden";
   
   wrap.appendChild(header);
   wrap.appendChild(calendar);
-  calendar.style.height = "calc(100% - 70px)";
+  //calendar.style.height = "calc(100% - 70px)";
 calendar.style.boxSizing = "border-box";
   document.body.appendChild(wrap);
   await new Promise(r => setTimeout(r, 150));
@@ -243,42 +250,71 @@ async function generateImage(){
   link.click();
   wrap.remove();
 }
+async function generatePDF(){
 
-async function generatePDF() {
-
-    const { wrap } = await prepareExportWrapper();
+    const {wrap} = await prepareExportWrapper();
 
     const canvas = await html2canvas(wrap,{
-        scale:2.5,
+        scale:4,
         useCORS:true,
-        backgroundColor:"#fff"
+        backgroundColor:"#ffffff",
+        scrollX:0,
+        scrollY:0
     });
+
+    wrap.remove();
 
     const pdf = new jspdf.jsPDF({
         orientation:"landscape",
         unit:"mm",
-        format:"a4"
+        format:"a4",
+        compress:true
     });
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const imgWidth = pageWidth - 10;
-    const imgHeight = canvas.height * imgWidth / canvas.width;
+    const margin=5;
+
+    const printableWidth=pageWidth-margin*2;
+    const printableHeight=pageHeight-margin*2;
+
+    const imgRatio=canvas.width/canvas.height;
+    const pageRatio=printableWidth/printableHeight;
+
+    let imgWidth;
+    let imgHeight;
+
+    if(imgRatio>pageRatio){
+
+        imgWidth=printableWidth;
+        imgHeight=imgWidth/imgRatio;
+
+    }else{
+
+        imgHeight=printableHeight;
+        imgWidth=imgHeight*imgRatio;
+
+    }
+
+    const x=(pageWidth-imgWidth)/2;
+    const y=(pageHeight-imgHeight)/2;
 
     pdf.addImage(
-        canvas,
+        canvas.toDataURL("image/png"),
         "PNG",
-        5,
-        5,
+        x,
+        y,
         imgWidth,
-        imgHeight
+        imgHeight,
+        "",
+        "FAST"
     );
 
-    pdf.save("cardapio.pdf");
+    pdf.save(`cantina-${viewDate.getFullYear()}-${String(viewDate.getMonth()+1).padStart(2,"0")}.pdf`);
 
-    wrap.remove();
 }
+
 
 loadData();
 </script>
